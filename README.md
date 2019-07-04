@@ -1,4 +1,4 @@
-### d3 demo by uct
+### d3 学习笔记
 
 
 ### 1、启动方法
@@ -15,5 +15,3 @@
     http://localhost:8082  
     or
     http://localhost:8082/index2.html
-
-### 2、或者直接在浏览器中打开Html文件

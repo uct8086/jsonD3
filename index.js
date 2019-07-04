@@ -7,19 +7,26 @@ const getMime = (fs,extname)=>{
 	let Mimes = JSON.parse(data.toString());
 	return Mimes[extname] || 'text/html';
 }
+
+const isHtml = [".htm", ".html" ,".hts", ".dhtml", ".stm"];
+
 const server = http.createServer((req,res)=>{   
-	let pathName = url.parse(req.url).pathname;  
+	let pathName = url.parse(req.url).pathname; 
+	let extName = path.extname(pathName); 
     console.log(pathName); 
 
     if(pathName=='/'){  
-    	pathName = '/index.html';
-    }
+    	pathName = '/view/index.html';
+	}
+	
+	if(isHtml.includes(extName)) {
+		pathName = `/view${pathName}`;
+	}
 
     if(pathName=='/favicon.ico'){  
     	res.end();
     }
 	if(pathName!= '/favicon.ico'){
-        let extName = path.extname(pathName);
          fs.readFile(path.join(__dirname,pathName), function(err,data){   
          	if(err){    
          		console.log(err);
