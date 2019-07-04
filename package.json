@@ -1,0 +1,14 @@
+{
+  "name": "d3_demo",
+  "version": "1.0.0",
+  "description": "d3 demo by uct",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "uct",
+  "license": "ISC",
+  "dependencies": {
+    "nodemon": "^1.19.1"
+  }
+}

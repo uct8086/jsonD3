@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>第三题</title>
+  <style>
+    rect.bordered {
+      stroke: #E6E6E6;
+      stroke-width: 1px;
+    }
+
+    .cities {
+      fill: none;
+      stroke: #aaa;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      stroke-width: 1.5px;
+    }
+
+    .city--hover {
+      stroke: #ff003a;
+      stroke-width: 3px;
+    }
+
+    .focus text {
+      text-anchor: middle;
+      text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+    }
+
+    .voronoi path {
+      fill: none;
+      pointer-events: all;
+    }
+
+    .voronoi--show path {
+      stroke: red;
+      stroke-opacity: 0.2;
+    }
+
+    #form {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+    }
+
+    label {
+      width: 100%;
+      float: left;
+    }
+
+    #user {
+      font-size: 16px;
+      color: #c366dd;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <h3>第二题实现</h3>
+  <svg width="1260" height="700"></svg>
+  <label>处理数据较慢，请稍等，鼠标移动到路径上可高亮显示</label>
+  <label id="user">当前用户：0</label>
+  <div id="dataset-picker">
+  </div>
+  <script src="./scripts/d3.v4.min.js"></script>
+  <script>
+    let dataPath = ["./data/data/day1.csv", "./data/data/table.csv"];
+    var svg = d3.select("svg"),
+      margin = { top: 30, right: 30, bottom: 30, left: 30 },
+      width = svg.attr("width") - margin.left - margin.right,
+      height = svg.attr("height") - margin.top - margin.bottom,
+      g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var gridSize = Math.floor(width / 30);
+    var ydata = [];
+    var key = 0;
+    do { ydata.push(key * gridSize); key++; } while (key < 30);
+    var xdata = [];
+    var key2 = 0;
+    do { xdata.push(key2 * gridSize); key2++; } while (key2 < 16);
+
+    var xycross = d3.cross(ydata, xdata);
+
+    var x = d3.scaleIdentity()
+      .range([0, width]);
+
+    var y = d3.scaleIdentity()
+      .range([height, 0]);
+
+    var voronoi = d3.voronoi()
+      .x(function (d) { return x(d.y * gridSize + (gridSize / 2)); })
+      .y(function (d) { return y(d.x * gridSize + (gridSize / 2)); })
+      .extent([[-margin.left, -margin.top], [width + margin.right, height + margin.bottom]]);
+
+    var line = d3.line()
+      .x(function (d) { return x(d.y * gridSize + (gridSize / 2)); })
+      .y(function (d) { return y(d.x * gridSize + (gridSize / 2)); });
+
+    var sensorData = [], floor = 1, userId = 0;
+    async function drawFloor(file, f) {
+      g.selectAll('path').remove();
+      g.selectAll('.sensor-style').remove();
+      document.getElementById("user").innerHTML = `当前用户： 0`;
+      let cacheData = [];
+      floor = f;
+      sensorData = await drawSensor(dataPath[1], floor);
+      d3.csv(file, buildData, function (error, data) {
+        if (error) throw error;
+        if (Object.keys(cacheData).length === 0) {
+          var ms = d3.map(data, function (d) { return d.id; });
+          var keys = ms.keys();
+          let finalData = {};
+          keys.forEach((item) => {
+            finalData[item] = [];
+            data.forEach((inner) => {
+              if (item === inner.id) {
+                finalData[item].push(inner);
+              }
+            })
+          })
+          cacheData = finalData;
+        }
+        let cache2Data = Object.values(cacheData);
+
+        x.domain([0, width]);
+        y.domain([height, 0]);
+
+        g.append("g")
+          .attr("class", "axis axis--x")
+          .call(d3.axisTop(x).tickValues([...ydata, 1200]));
+
+        g.append("g")
+          .attr("class", "axis axis--y")
+          .call(d3.axisLeft(y).tickValues([...xdata, 640]))
+          .append("text")
+          .attr("x", 4)
+          .attr("y", 0.5)
+          .attr("dy", "0.32em")
+          .style("text-anchor", "start")
+          .style("fill", "#000")
+          .style("font-weight", "bold")
+
+
+        g.append("g")
+          .attr("class", "cities")
+          .selectAll("path")
+          .data(cache2Data)
+          .enter().append("path")
+          .attr("d", function (d) {
+            d.line = this;
+            return line(d);
+          });
+
+        var voronoiGroup = g.append("g")
+          .attr("class", "voronoi");
+
+        voronoiGroup.selectAll("path")
+          .data(cache2Data)
+          .enter().append("path")
+          .attr("d", function (d) {
+            d.line = this;
+            return d ? line(d) : null;
+          })
+          .on("mouseover", mouseover)
+          .on("mouseout", mouseout);
+        d3.select("#show-voronoi")
+          .property("disabled", false)
+          .on("change", function () { voronoiGroup.classed("voronoi--show", this.checked); });
+
+        var datasetpicker = d3.select("#dataset-picker").selectAll(".dataset-button")
+          .data(['1', '2']);
+
+        datasetpicker.enter()
+          .append("input")
+          .attr("value", function (d) { return "第 " + d + " 层" })
+          .attr("type", "button")
+          .attr("class", "dataset-button")
+          .on("click", function (d) {
+            drawFloor(dataPath[0], d);
+          });
+
+        function mouseover(d) {
+          d3.select(d.line).classed("city--hover", true);
+          d.line.parentNode.appendChild(d.line);
+          document.getElementById("user").innerHTML = `当前用户： ${d[0].id}`;
+        }
+
+        function mouseout(d) {
+          d3.select(d.line).classed("city--hover", false);
+        }
+      });
+    }
+
+    function drawSensor(csvFile, f) {
+      let d = new Promise(function (reslove, reject) {
+        d3.csv(csvFile, function (error, data) {
+          if (error) throw error;
+          x.domain(d3.extent(xdata));
+          y.domain([0, d3.max(data, function (c) {
+            return d3.max(c.y, function (d) { return d.y; });
+          })]).nice();
+          let floorData = [];
+          data.forEach((item) => {
+            if (item.floor == f)
+              floorData.push(item)
+          })
+
+          g.selectAll('.sensor-style').data(floorData).enter().append("rect")
+            .attr("x", function (d) {
+              return d.y * gridSize;
+            })
+            .attr("y", function (d) {
+              return d.x * gridSize;
+            })
+            .attr("rx", 1)
+            .attr("ry", 1)
+            .attr("class", "sensor-style bordered")
+            .attr("width", gridSize)
+            .attr("height", gridSize)
+            .style("fill", "#fefebe");
+
+          reslove(data);
+        })
+      });
+      return d;
+    }
+
+
+    function buildData(d, i, columns) {
+      let val = sensorData.find(item => d.sid == item.sid);
+      if (val.floor == floor) {
+        return Object.assign({}, d, { x: val.x, y: val.y });
+      } else {
+        return null;
+      }
+    }
+
+    drawFloor(dataPath[0], 1);
+
+  </script>
+</body>
+
+</html>
