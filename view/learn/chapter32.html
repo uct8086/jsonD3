@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>chapter32</title>
+    <link rel="stylesheet" href="./styles/style4book.css"/>
+</head>
+
+<body>
+  <div id="container"></div>
+  <script src="./scripts/d3.v4.min.js"></script>
+    <script>
+        // 将函数绑定为数据
+        var data = [];
+        var datum = function(x) {
+            return 15 + x * x;
+        };
+        var newData = function() {
+            data.push(datum);
+            return data;
+        };
+        function render() {
+            var divs = d3.select('#container')
+                        .selectAll('div')
+                        .data(newData);
+            divs.enter().append('div').append('span');
+            divs.attr('class', 'v-bar')
+                .style('height', function(d, i){
+                    return d(i) + 'px';
+                })
+                .select('span')
+                    .text(function(d, i) {
+                        return d(i);
+                    });
+            divs.exit().remmove();
+        }
+        setInterval(() => {
+            render();
+        }, 1000);
+        render();
+    </script>
+</body>
+
+</html>

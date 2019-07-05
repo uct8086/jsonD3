@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>chapter21</title>
+    <link rel="stylesheet" href="./styles/style4book.css"/>
+</head>
+
+<body>
+  <div></div>
+  <div></div>
+  <div></div>
+  <script src="./scripts/d3.v4.min.js"></script>
+    <script>
+        d3.selectAll("div")
+        .attr('class',"red box")
+        .each(function(d, i) {
+            d3.select(this).append('h1').text(i);
+        });
+    </script>
+</body>
+
+</html>

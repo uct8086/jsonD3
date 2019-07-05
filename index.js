@@ -15,20 +15,22 @@ const server = http.createServer((req,res)=>{
 	let extName = path.extname(pathName); 
     console.log(pathName); 
 
-    if(pathName=='/'){  
+    if (pathName=='/'){  
     	pathName = '/view/index.html';
 	}
 	
-	if(isHtml.includes(extName)) {
+	if (isHtml.includes(extName) && pathName.indexOf("/chapter") !== -1) {
+		pathName = `/view/learn${pathName}`;
+	} else  if(isHtml.includes(extName)) {
 		pathName = `/view${pathName}`;
 	}
 
-    if(pathName=='/favicon.ico'){  
+    if (pathName=='/favicon.ico') {  
     	res.end();
     }
-	if(pathName!= '/favicon.ico'){
-         fs.readFile(path.join(__dirname,pathName), function(err,data){   
-         	if(err){    
+	if (pathName!= '/favicon.ico') {
+         fs.readFile(path.join(__dirname,pathName), function(err,data) {   
+         	if (err) {    
          		console.log(err);
          		fs.readFile(path.join(__dirname,`404.html`),(err,data)=>{
          			res.writeHead(404,{"Content-Type":"text/html;chartset='utf8'"})
