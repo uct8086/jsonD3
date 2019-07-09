@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>chapter65</title>
+    <link rel="stylesheet" href="./styles/style4book.css" />
+</head>
+
+<body>
+    <script src="./scripts/d3.v4.min.js"></script>
+    <script type="text/javascript">
+       var data = ["Cat", "Dog", "Cat", "Dog", "Cat", "Dog", "Cat", "Dog"],
+        duration = 1500;
+
+    d3.select("body").selectAll("div")
+            .data(data)
+        .enter()
+        .append("div")
+            .attr("class", "fixed-cell")
+            .style("top", function (d, i) {
+                return i * 40 + "px";
+            })
+            .style("background-color", "steelblue")
+            .style("color", "white")
+            .style("left", "500px")
+            .text(function (d) {
+                return d;
+            })
+            .transition() // <- A
+                .duration(duration)
+                    .style("left", "10px")
+            .filter(function(d){return d == "Cat";}) // <- B
+                .transition() // <- C
+                .duration(duration)
+                    .style("left", "500px");   
+    </script>
+</body>
+
+</html>

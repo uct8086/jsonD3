@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>chapter64</title>
+    <link rel="stylesheet" href="./styles/style4book.css" />
+</head>
+
+<body>
+    <script src="./scripts/d3.v4.min.js"></script>
+    <script type="text/javascript">
+       var body = d3.select("body");
+        
+        function teleport(s){
+            s.transition().duration(1000) // <-A
+                .style("width", "200px")
+                .style("height", "1px")
+            .transition().duration(500) // <-B
+                .style("left", "600px")
+            .transition().duration(1000) // <-C
+                .style("left", "800px")
+                .style("height", "80px")
+                .style("width", "80px");
+        }
+        
+        body.append("div")    
+                .style("position", "fixed")
+                .style("background-color", "steelblue")
+                .style("left", "10px")
+                .style("width", "80px")
+                .style("height", "80px")
+                .call(teleport); // <-D      
+    </script>
+</body>
+
+</html>
