@@ -21,7 +21,9 @@ const server = http.createServer((req,res)=>{
 	
 	if (isHtml.includes(extName) && pathName.indexOf("/chapter") !== -1) {
 		pathName = `/view/learn${pathName}`;
-	} else  if(isHtml.includes(extName)) {
+	} else if (isHtml.includes(extName) && pathName.indexOf("/true-") !== -1) {
+		pathName = `/view/trueProj${pathName}`;
+	} else if(isHtml.includes(extName)) {
 		pathName = `/view${pathName}`;
 	}
 
