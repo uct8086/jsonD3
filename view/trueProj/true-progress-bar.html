@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>progress-bar</title>
+  <link rel="stylesheet" href="./styles/style4book.css" />
+  <style type="text/css">
+    .progressSelector {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+
+<body>
+  <select class="progressSelector" onchange="moveProgressBar(value)">
+    <option value="started" selected>Started</option>
+    <option value="inProgress">In Progress</option>
+    <option value="completed">Completed</option>
+  </select>
+
+  <div class="progress"></div>
+  <script src="./scripts/d3.v4.min.js"></script>
+  <script type="text/javascript">
+
+    var svg = d3.select('.progress')
+      .append('svg')
+      .attr('height', 100)
+      .attr('width', 500);
+
+    var states = ['started', 'inProgress', 'completed'],
+      segmentWidth = 100,
+      currentState = 'started';
+
+    var colorScale = d3.scaleOrdinal()
+      .domain(states)
+      .range(['yellow', 'orange', 'green']);
+
+    svg.append('rect')
+      .attr('class', 'bg-rect')
+      .attr('rx', 10)
+      .attr('ry', 10)
+      .attr('fill', 'gray')
+      .attr('height', 15)
+      .attr('width', function () {
+        return segmentWidth * states.length;
+      })
+      .attr('x', 0);
+
+    var progress = svg.append('rect')
+      .attr('class', 'progress-rect')
+      .attr('fill', function () {
+        return colorScale(currentState);
+      })
+      .attr('height', 15)
+      .attr('width', 0)
+      .attr('rx', 10)
+      .attr('ry', 10)
+      .attr('x', 0);
+
+    progress.transition()
+      .duration(1000)
+      .attr('width', function () {
+        var index = states.indexOf(currentState);
+        return (index + 1) * segmentWidth;
+      });
+
+    function moveProgressBar(state) {
+      progress.transition()
+        .duration(1000)
+        .attr('fill', function () {
+          return colorScale(state);
+        })
+        .attr('width', function () {
+          var index = states.indexOf(state);
+          return (index + 1) * segmentWidth;
+        });
+    }
+  </script>
+
+</body>
+
+</html>

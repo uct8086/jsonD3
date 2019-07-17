@@ -36,7 +36,7 @@
         for (var i = 1;i <= max; ++i) data.push(i);
         var alphabet = d3.scaleOrdinal()
             .domain(data)
-            .range(['a','b','c','d','e','f','g','h','i','j']);
+            .range(data);
         function render(data, scale, selector) {
             var cells = d3.select(selector).selectAll('div.cell')
                         .data(data);
@@ -45,7 +45,7 @@
                     .classed('cell', true)
                     .style('display', 'inline-block')
                     .style('background-color', function(d) {
-                        return scale(d).indexOf('#') >= 0 ? scale(d) : 'white';
+                        return scale(d) ;
                     })
                     .text(function(d) {
                         return scale(d);
