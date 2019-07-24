@@ -10,10 +10,14 @@ const getMime = (fs,extname)=>{
 
 const isHtml = [".htm", ".html" ,".hts", ".dhtml", ".stm"];
 
-const server = http.createServer((req,res)=>{   
+// const readFileTest = require('./scripts/TraverseFolder.js');
+
+
+const server = http.createServer(async (req,res)=>{   
 	let pathName = url.parse(req.url).pathname; 
 	let extName = path.extname(pathName); 
-    console.log(pathName); 
+	console.log(pathName); 
+	// let data = await readFileTest('.json');
 
     if (pathName=='/'){  
     	pathName = '/view/index.html';

@@ -45,9 +45,9 @@
             .data(data)
             .enter().append("circle")
             .attr("r", r)
-            .attr("transform", function (d) {
-                return "translate(" + d + ")";
-            });
+            // .attr("transform", function (d) {
+            //     return "translate(" + d + ")";
+            // });
 
         function zoomHandler() {
             var transform = d3.event.transform;

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Area graph with gradient</title>
+  <style type="text/css">
+    .area {
+      fill: url(#area-gradient);
+      stroke-width: 0px;
+    }
+  </style>
+</head>
+
+<body>
+  <script src="./scripts/d3.v4.min.js"></script>
+  <script type="text/javascript">
+
+
+    // set the dimensions and margins of the graph
+    var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+      width = 960 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+    // parse the date / time
+    var parseTime = d3.timeParse("%d-%b-%y");
+
+    // set the ranges
+    var x = d3.scaleTime().range([0, width]);
+    var y = d3.scaleLinear().range([height, 0]);
+
+    // define the area
+    var area = d3.area()
+      .x(function (d) { return x(d.date); })
+      .y0(height)
+      .y1(function (d) { return y(d.close); });
+
+    // append the svg obgect to the body of the page
+    // appends a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+    // Get the data
+    d3.csv("../../data/temp.csv", function (error, data) {
+      if (error) throw error;
+
+      // format the data
+      data.forEach(function (d) {
+        d.date = parseTime(d.date);
+        d.close = +d.close;
+      });
+
+      // Scale the range of the data
+      x.domain(d3.extent(data, function (d) { return d.date; }));
+      y.domain([0, d3.max(data, function (d) { return d.close; })]);
+
+      // set the gradient
+      svg.append("linearGradient")
+        .attr("id", "area-gradient")
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", 0).attr("y1", y(0))
+        .attr("x2", 1000).attr("y2", y(0))
+        .selectAll("stop")
+        .data([
+          { offset: "0%", color: "red" },
+          { offset: "30%", color: "red" },
+          { offset: "45%", color: "black" },
+          { offset: "55%", color: "black" },
+          { offset: "60%", color: "lawngreen" },
+          { offset: "100%", color: "lawngreen" }
+        ])
+        .enter().append("stop")
+        .attr("offset", function (d) { return d.offset; })
+        .attr("stop-color", function (d) { return d.color; });
+
+      // Add the area.
+      svg.append("path")
+        .data([data])
+        .attr("class", "area")
+        .attr("d", area);
+
+      // Add the X Axis
+      svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+      // Add the Y Axis
+      svg.append("g")
+        .call(d3.axisLeft(y));
+
+    });
+
+  </script>
+
+</body>
+
+</html>

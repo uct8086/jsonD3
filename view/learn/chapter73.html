@@ -7,6 +7,13 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>chapter73</title>
     <link rel="stylesheet" href="./styles/style4book.css" />
+    <style type="text/css">
+        .area {
+          fill: url(#area-gradient);
+          stroke-width: 0px;
+          fill-opacity: 1;
+        }
+      </style>
 </head>
 
 <body>
@@ -57,17 +64,36 @@
             .x(function(d) { return x(d.x); })
             .y0(y(0))
             .y1(function(d) { return y(d.y); })
-            .curve(mode); // <-B
+            // .curve(mode); // <-B
             
+       
+
+      // set the gradient
+      svg.append("linearGradient")
+        .attr("id", "area-gradient")
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", 0).attr("y1", y(0))
+        .attr("x2", width).attr("y2", y(0))
+        .selectAll("stop")
+        .data([
+          { offset: "0%", color: "#f0ba68" },
+          { offset: "45%", color: "#6af068" },
+          { offset: "100%", color: "#689ef0" }
+        ])
+        .enter().append("stop")
+        .attr("offset", function (d) { return d.offset; })
+        .attr("stop-color", function (d) { return d.color; });
+
         svg.selectAll("path.area")
                 .data([data])
             .enter()
                 .append("path")
-                .attr("class", "area")
+                .attr("class", "area");
+
                 
         svg.selectAll("path.area")
             .data([data])
-            .attr("d", function(d){return area(d);});        
+            .attr("d", function(d){return area(d);})
     }
     
     function renderDots(svg){        
