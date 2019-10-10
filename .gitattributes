@@ -1,2 +1,2 @@
 # Auto detect text files and perform LF normalization
-* text=d3
+*.html linguist-language=d3
