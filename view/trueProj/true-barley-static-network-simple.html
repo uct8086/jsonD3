@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>barley-static-network-simple</title>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <script src="./scripts/d3.v4.min.js"></script>
+    <script type="text/javascript">
+        // Feel free to change or delete any of the code you see in this editor!
+        var svg = d3.select("body").append("svg")
+            .attr("width", 960)
+            .attr("height", 500)
+
+
+        var width = 960;
+        var height = 500;
+        var selectedIndex;
+
+
+        var center = svg.append("g")
+            .attr("transform", "translate(" + width / 2 + ", " + height / 2 + ")")
+
+        var radius = 200;
+        var data = d3.range(5);
+
+
+        function angle(i) {
+            return i / 5 * 2 * Math.PI;
+        }
+        
+
+        var circle = center.selectAll("circle")
+            .data(data)
+
+        circle.enter().append("circle")
+            .attr("cx", function (d, i) {
+                if (i == selectedIndex) {
+                    return 0;
+                }
+                return radius * Math.cos(angle(i))
+            })
+            .attr("cy", function (d, i) {
+                if (i == selectedIndex) {
+                    return 0;
+                }
+                return radius * Math.sin(angle(i))
+            })
+            .attr("r", 50)
+
+            .on("mouseover", function () {
+                d3.select(this)
+                    .style("fill", "red")
+            })
+            .on("mouseout", function () {
+                d3.select(this)
+                    .style("fill", "black")
+            })
+            .on("click", function () {
+                d3.select(this)
+                    .style("fill", "blue")
+            })
+            var textNode = center.selectAll("text")
+            .data(data)
+            var text =textNode.enter()
+                .append("text")
+                .attr("class", "text")
+                .text(function (d, i) { return "d.shortName"; })
+                .attr("x", function (d, i) {
+                    if (i == selectedIndex) {
+                        return 0;
+                    }
+                    return radius * Math.cos(angle(i)) - 50
+                })
+                .attr("y", function (d, i) {
+                    if (i == selectedIndex) {
+                        return 0;
+                    }
+                    return radius * Math.sin(angle(i)) + 60
+                })
+
+            center.append("circle").attr("r", 70);
+
+
+    </script>
+
+</body>
+
+</html>
