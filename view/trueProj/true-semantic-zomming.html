@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>semantic-zomming</title>
+    <style>
+
+    </style>
+</head>
+
+<body>
+        <svg width="960" height="500"></svg>
+    <script src="./scripts/d3.v4.min.js"></script>
+    <script type="text/javascript">
+        var svg = d3.select("svg"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
+
+        var randomX = d3.randomNormal(width / 2, 80),
+            randomY = d3.randomNormal(height / 2, 80),
+            data = d3.range(2000).map(function () { return [randomX(), randomY()]; });
+
+        var circle = svg.selectAll("circle")
+            .data(data)
+            .enter().append("circle")
+            .attr("r", 2.5)
+            .attr("transform", transform(d3.zoomIdentity));
+
+
+        svg.append("rect")
+            .attr("fill", "none")
+            .attr("pointer-events", "all")
+            .attr("width", width)
+            .attr("height", height)
+            .call(d3.zoom()
+                .scaleExtent([1, 8])
+                .on("zoom", zoom));
+
+        function zoom() {
+            circle.attr("transform", transform(d3.event.transform));
+        }
+
+        function transform(t) {
+            return function (d) {
+                return "translate(" + t.apply(d) + ")";
+            };
+        }
+
+    </script>
+
+</body>
+
+</html>
