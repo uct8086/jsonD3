@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>barley-network</title>
+    <style>
+        .nodes circle {
+            fill: #e80080;
+            stroke: #404040;
+        }
+
+        .links {
+            stroke: #404040;
+            stroke-width: 1.5px;
+        }
+
+        .text {
+            pointer-events: none;
+            text-anchor: middle;
+            font: 8.8px sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <svg width="900" height="500"></svg>
+    <script src="./scripts/d3.v4.min.js"></script>
+    <script type="text/javascript">
+
+        var svg = d3.select("svg"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
+
+        var simulation = d3.forceSimulation()
+            .force("charge", d3.forceManyBody().strength(-650))
+            .force('center', d3.forceCenter(width/2, height*(2/5)))
+            .force("link", d3.forceLink().id(function (d) { return d.id; }).distance(185))
+            .force("x", d3.forceX(width / 2))
+            .force("y", d3.forceY(height / 2));
+
+        var color = d3.scaleOrdinal(d3.schemeCategory20c);
+
+        d3.tsv("../../data/barley.tsv", function (error, data) {
+
+            var yieldLookup = {};
+            data = data.slice(0,6)
+
+            data.forEach(function (d) {
+
+                d.site = d.site.replace(" ", "").replace(". ", "")
+                d.variety = d.variety.replace(" ", "").replace(". ", "")
+                yieldLookup[d.site + '-' + d.variety + "-" + d.year] = +d.yield;
+
+            })
+
+            var sites = d3.set(data.map(function (d) { return d.site; })).values();
+            var siteVarieties = d3.set(data.map(function (d) { return d.site + '-' + d.variety; })).values();
+            var siteVarietiesYears = d3.set(data.map(function (d) { return d.site + '-' + d.variety + "-" + d.year; })).values();
+
+            var nodes = [],
+                links = [];
+
+            sites.forEach(function (site) {
+                nodes.push({
+                    "id": site,
+                    "shortName": site,
+                    "radius": 63,
+                    "color": "#e80080",
+                    "classValue": "site"
+                })
+            });
+
+            siteVarieties.forEach(function (siteVariety) {
+                nodes.push({
+                    "id": siteVariety,
+                    "shortName": siteVariety.split("-")[1],
+                    "radius": 25,
+                    "color": "9bc850",
+                    "classValue": siteVariety.split("-")[1].replace(".", "")
+                });
+
+                links.push({
+                    "source": siteVariety.split("-")[0],
+                    "target": siteVariety
+                })
+            });
+
+            siteVarietiesYears.forEach(function (svy) {
+                nodes.push({
+                    "id": svy,
+                    "shortName": svy.split("-")[2],
+                    "radius": 50,
+                    "color": "d1d3d4",
+                    "classValue": svy.split("-")[1].replace(".", "")
+                });
+
+                links.push({
+                    "source": svy.split("-")[0] + '-' + svy.split("-")[1],
+                    "target": svy
+                })
+
+            });
+
+            var graph = {
+                "nodes": nodes,
+                "links": links
+            }
+
+            var link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(graph.links)
+                .enter().append("line");
+
+            var node = svg.append("g")
+                .attr("class", "nodes")
+                .selectAll("circle")
+                .data(graph.nodes)
+                .enter().append("circle")
+                .attr("class", function (d) { return d.classValue; })
+                .attr("r", function (d) { return d.radius; })
+                .style("fill", function (d) { return d.color; })
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+            var text = svg.append("g")
+                .attr("class", "text")
+                .selectAll("text")
+                .data(graph.nodes)
+                .enter().append("text")
+                .text(function (d, i) { return d.shortName; })
+
+            simulation
+                .nodes(graph.nodes)
+                .force("charge", d3.forceManyBody())
+                .force('center', d3.forceCenter(width/2, height*(2/5)))
+                .force('collision', d3.forceCollide().radius(function(d) { return d.radius }))
+                .on("tick", ticked);
+
+            simulation.force("link")
+                .links(graph.links);
+
+            function ticked() {
+
+                link.attr("x1", function (d) { return d.source.x; })
+                    .attr("y1", function (d) { return d.source.y; })
+                    .attr("x2", function (d) { return d.target.x; })
+                    .attr("y2", function (d) { return d.target.y; });
+
+                node.attr("cx", function (d) { return d.x; })
+                    .attr("cy", function (d) { return d.y; });
+
+                text.attr("x", function (d) { return d.x; })
+                    .attr("y", function (d) { return d.y; });
+
+            }
+
+        });
+
+
+
+        function dragstarted(d) {
+            if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(d) {
+            d.fx = d3.event.x;
+            d.fy = d3.event.y;
+        }
+
+        function dragended(d) {
+            if (!d3.event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+    </script>
+
+</body>
+
+</html>

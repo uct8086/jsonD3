@@ -1,166 +1,29 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>第一题</title>
-    <link rel="stylesheet" href="./styles/style.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>jsonD3</title>
+  <style>
+    code {
+      color: #ff66bb;
+    }
+  </style>
 </head>
 
 <body>
-  <h3>实现第一题</h3>
-  <div id="chart"></div>
-  <div id="dataset-picker">
-  </div>
-  <script src="./scripts/d3.v3.js"></script>
-  <script src="./scripts/d3.tip.v0.6.3.js"></script>
-  <script type="text/javascript">
-    var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-      width = 960 - margin.left - margin.right,
-      height = 600 - margin.top - margin.bottom,
-      gridSize = Math.floor(width / 25),
-      legendElementWidth = gridSize * 2,
-      buckets = 6,
-      colors = ["#fefebe", "#fddf8a", "#fdae61", "#f36c42", "#d43d4e", "#9e0142"],
-      days = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
-      times = ["1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006"];
-      datasets = ["./data/temperature_daily.csv"];
-
-    var svg = d3.select("#chart").append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    var dayLabels = svg.selectAll(".dayLabel")
-      .data(days)
-      .enter().append("text")
-      .text(function (d) { return d; })
-      .attr("x", 0)
-      .attr("y", function (d, i) { return i * gridSize; })
-      .style("text-anchor", "end")
-      .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-      .attr("class", function (d, i) { return "dayLabel mono axis axis-xy"; });
-
-    var timeLabels = svg.selectAll(".timeLabel")
-      .data(times)
-      .enter().append("text")
-      .text(function (d) { return d; })
-      .attr("x", function (d, i) { return i * gridSize; })
-      .attr("y", 0)
-      .style("text-anchor", "middle")
-      .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-      .attr("class", function (d, i) { return "timeLabel mono axis axis-xy"; });
-
-
-    var x = d3.scale.ordinal()
-      .rangeRoundBands([0, width], .1);
-
-    var y = d3.scale.linear()
-      .range([height, 0]);
-
-    var tip = d3.tip()
-      .attr('class', 'd3-tip')
-      .offset([-10, 0])
-      .html(function (d) {
-        var format = d3.time.format("%Y-%m-%d");
-        var fStr = format(d.dates);
-        return `Date: ${fStr},Min:${d.minTemp}, Max:${d.maxTemp}`;
-      })
-
-    svg.call(tip);
-
-    var drawChart = function (csvFile, type) {
-      if (type === undefined) type = 'minTemp';
-      d3.csv(csvFile,
-        function (d) {
-          return {
-            dates: new Date(d.date),
-            minTemp: +d.min_temperature,
-            maxTemp: +d.max_temperature
-          };
-        },
-        function (error, data) {
-          var colorScale = d3.scale.quantile()
-            .domain([d3.min(data, function (d) {
-              return d[type];
-            }), d3.max(data, function (d) {
-              return d[type];
-            })])
-            .range(colors);
-
-          var cards = svg.selectAll(".rect-style").data(data);
-
-          cards.enter().append("rect")
-            .attr("x", function (d) {
-              var year = d.dates.getFullYear();
-              return (year - 1997) * gridSize;
-            })
-            .attr("y", function (d) {
-              var month = d.dates.getMonth();
-              return month * gridSize;
-            })
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("class", "rect-style bordered")
-            .attr("width", gridSize)
-            .attr("height", gridSize)
-            .style("fill", colors[0])
-            .on('mouseover', tip.show)
-            .on('mouseout', tip.hide);
-
-          cards.transition().duration(1000)
-            .style("fill", function (d) {
-              return colorScale(d[type]);
-            });
-
-          cards.exit().remove();
-
-          var legend = svg.selectAll(".legend")
-            .data([0].concat(colorScale.quantiles()), function (d) {
-              return d;
-            });
-
-          legend.enter().append("g").attr("class", "legend");
-
-          legend.append("rect")
-            .attr("x", function (d, i) {
-              return legendElementWidth * i;
-            })
-            .attr("y", height + 50)
-            .attr("width", legendElementWidth)
-            .attr("height", gridSize / 2)
-            .style("fill", function (d, i) {
-              return colors[i];
-            });
-
-          legend.append("text")
-            .attr("class", "mono")
-            .text(function (d) { return "≥ " + Math.round(d); })
-            .attr("x", function (d, i) { return legendElementWidth * i; })
-            .attr("y", height + gridSize + 50);
-
-          legend.exit().remove();
-
-          var datasetpicker = d3.select("#dataset-picker").selectAll(".dataset-button")
-            .data(['minTemp', 'maxTemp']);
-
-          datasetpicker.enter()
-            .append("input")
-            .attr("value", function (d) { return "Dataset " + d })
-            .attr("type", "button")
-            .attr("class", "dataset-button")
-            .on("click", function (d) {
-              drawChart(datasets[0], d);
-            });
-
-        });
-    };
-
-    drawChart(datasets[0]);
-    
-  </script>
+  <h1>欢迎，这里是Uct8086的学习实战项目代码</h1>
+  <hr>
+  <h2>/view/learn</h2>
+  <p>D3 4.X 数据可视化实战手册随书代码实现</p>
+  <h3>访问</h3>
+  <code>localhost:8082/chapter21.html</code>
+  <h2>/view/trueProj</h2>
+  <p>实际开发中例子实现</p>
+  <h3>访问</h3>
+  <code>localhost:8082/true-bar-y.html</code>
 </body>
 
 </html>

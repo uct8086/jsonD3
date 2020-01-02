@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Patrick+Hand|Signika|Dosis');
+
+        .area {
+            fill: steelblue;
+            clip-path: url(#clip);
+        }
+
+        .zoom {
+            cursor: move;
+            fill: none;
+            pointer-events: all;
+        }
+
+        .axis--y>.domain,
+        .axis--x>.domain {
+            stroke: #BEBEBE;
+        }
+
+        .axis--y>g.tick>line,
+        .axis--x>g.tick>line {
+            stroke: #BEBEBE;
+        }
+
+        #var_name {
+            margin-left: 60px;
+            margin-bottom: 5px;
+            font-family: 'Dosis', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <p id="var_name"></p> -->
+    <svg width="500" height="3060"></svg>
+    <script src="../../scripts/d3.v4.min.js"></script>
+    <script src="../../scripts/d3-selection-multi.v1.min.js"></script>
+    <script>
+
+        const svg = d3.select("svg"),
+            margin = { top: 20, right: 20, bottom: 30, left: 40 },
+            margin2 = { top: 20, right: 20, bottom: 30, left: 300 },
+            width = +svg.attr("width") - margin.left - margin.right,
+            width2 = +svg.attr("width") - margin2.left - margin2.right,
+            height = +svg.attr("height") - margin.top - margin.bottom;
+
+        const x = d3.scaleLinear().range([0, width]),
+            x2 = d3.scaleLinear().range([0, width2]),
+            y = d3.scaleBand().range([height, 0]).padding(0.1),
+            y2 = d3.scaleBand().range([height, 0]).padding(0.1);
+
+        const xAxis = d3.axisBottom(x),
+            xAxis2 = d3.axisBottom(x2),
+            yAxis = d3.axisLeft(y),
+            yAxis2 = d3.axisLeft(y2);
+
+        let brush, zoom, ref_data = [], data, nbFt, mean_value;
+        let focus, context;
+        let displayed;
+        let current_range;
+        let my_region = 'FRE';
+        let variable_name = 'Ma variable';
+
+        // d3.select('#var_name')
+        //   .text(variable_name);
+
+        // d3.json("../../data/numsDict415.json", function (error, geojson_data) {
+        //     if (error) throw error;
+            // ref_data = geojson_data.features.map(ft => ({
+            //     id: ft.properties.NUTS1_2016,
+            //     EMP_2014: +ft.properties.EMP_2014,
+            //     Y20_60_2014: +ft.properties['Y20.64_2014'] / 1000,
+            //     TX_EMP_2014: (+ft.properties.EMP_2014 / +ft.properties['Y20.64_2014']) * 100000,
+            //     ratio: (+ft.properties.EMP_2014 / +ft.properties['Y20.64_2014']) * 100000,
+            // })).filter(ft => ft.ratio);
+            
+            // for(let [key,value] of Object.entries(geojson_data)) {
+            //     ref_data.push({
+            //         id: key,
+            //         ratio: value.length / 1000
+            //     })
+            // }
+
+
+     d3.json("../../data/nuts1_data.json", function (error, geojson_data) {
+            if (error) throw error;
+            ref_data = geojson_data.features.map(ft => ({
+                id: ft.properties.NUTS1_2016,
+                EMP_2014: +ft.properties.EMP_2014,
+                Y20_60_2014: +ft.properties['Y20.64_2014'] / 1000,
+                TX_EMP_2014: (+ft.properties.EMP_2014 / +ft.properties['Y20.64_2014']) * 100000,
+                ratio: (+ft.properties.EMP_2014 / +ft.properties['Y20.64_2014']) * 100000,
+            })).filter(ft => ft.ratio);
+
+            data = [].concat(ref_data);
+            data.sort((a, b) => a.ratio - b.ratio);
+
+            nbFt = data.length;
+            mean_value = d3.mean(data.map(d => d.ratio));
+            brush = d3.brushY()
+                .extent([[0, 0], [width2, height]])
+                .on("brush end", brushed);
+
+            zoom = d3.zoom()
+                .scaleExtent([1, Infinity])
+                .translateExtent([[0, 0], [width, height]])
+                .extent([[0, 0], [width, height]]);
+            // .on("zoom", zoomed);
+
+            svg.append("defs").append("clipPath")
+                .attr("id", "clip")
+                .append("rect")
+                .attr("width", width)
+                .attr("height", height);
+
+            focus = svg.append("g")
+                .attr("class", "focus")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            context = svg.append("g")
+                .attr("class", "context")
+                .style("margin-left", "300")
+                .attr("transform", "translate(" + (margin2.left) + "," + margin2.top + ")");
+
+            //文案关联
+            x.domain([d3.min(data, d => d.ratio), d3.max(data, d => d.ratio)]);
+            y.domain(data.map(ft => ft.id));
+            x2.domain(x.domain());
+            y2.domain(y.domain());
+
+            focus.append("g")
+                .attr("class", "axis axis--x")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+            focus.select('.axis--x')
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)");
+
+            focus.append("g")
+                .attr("class", "axis axis--y")
+                .call(yAxis);
+
+            // let groupe_line_mean = focus.append('g').attr('class', 'mean');
+            // groupe_line_mean.append('text')
+            //     .attrs({ x: 60, y: y(mean_value) + 20 })
+            //     .styles({
+            //         'font-family': '\'Signika\', sans-serif',
+            //         'fill': 'red',
+            //         'fill-opacity': '0.8',
+            //         display: 'none'
+            //     })
+            //     .text('Valeur moyenne');
+
+            // groupe_line_mean.append('line')
+            //     .attrs({
+            //         x1: 0, x2: width, y1: y(mean_value), y2: y(mean_value),
+            //         'stroke-dasharray': '10, 5', 'stroke-width': '2px',
+            //     })
+            //     .style('stroke', 'red');
+
+            // groupe_line_mean.append('line')
+            //     .attrs({ x1: 0, x2: width, y1: y(mean_value), y2: y(mean_value), 'stroke-width': '14px' })
+            //     .style('stroke', 'transparent')
+            //     .on('mouseover', function () {
+            //         groupe_line_mean.select('text').style('display', 'initial');
+            //     })
+            //     .on('mouseout', function () {
+            //         groupe_line_mean.select('text').style('display', 'none');
+            //     });
+
+            updateMiniBars();
+            console.log(y.range());
+
+            context.append("g")
+                .attr("class", "brush")
+                .call(brush)
+                .call(brush.move);
+
+            // svg.append('text')
+            //     .attrs({ x: 60, y: 40 })
+            //     .styles({ 'font-family': '\'Signika\', sans-serif' })
+            //     .text(`Complétude : ${Math.round(data.length / geojson_data.features.length * 1000) / 10}%`);
+
+            svg.append('image')
+                .attrs({
+                    x: width2 + margin2.left + 5,
+                    y: 385,
+                    width: 15,
+                    height: 15,
+                    'xlink:href': '../../data/img/reverse_blue.png',
+                    id: 'img_reverse'
+                })
+                .on('click', function () {
+                    if (data[0].ratio < data[data.length - 1].ratio) {
+                        data.sort((a, b) => b.ratio - a.ratio);
+                    } else {
+                        data.sort((a, b) => a.ratio - b.ratio);
+                    }
+                    y.domain(data.slice(current_range[0], current_range[1]).map(ft => ft.id));
+                    y2.domain(data.map(ft => ft.id));
+                    // svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
+                    //     .scale(height / (current_range[1] - current_range[0]))
+                    //     .translate(-current_range[0], 0));
+                    update();
+                    updateAxis();
+                    updateMiniBars();
+                    updateContext(current_range[0], current_range[1]);
+                });
+
+            svg.append('animateTransform')
+                .attrs({
+                    'xlink:href': "#img_reverse",
+                    'attributeName': "transform",
+                    'attributeType': "XML",
+                    'type': "rotate",
+                    'from': `0 ${width2 + margin2.left + 5 + 7} 392`,
+                    'to': `360 ${width2 + margin2.left + 5 + 7} 392`,
+                    'begin': "5s; 17s;",
+                    'end': "8s;  19s;",
+                    'dur': '2s',
+                    'restart': "whenNotActive",
+                    'fill': "freeze",
+                });
+
+            // Prep the tooltip bits, initial display is hidden
+            const tooltip = svg.append("g")
+                .attr("class", "tooltip")
+                .style("display", "none");
+
+            tooltip.append("rect")
+                .attr("width", 50)
+                .attr("height", 40)
+                .attr("fill", "white")
+                .style("opacity", 0.5);
+
+            tooltip.append("text")
+                .attr('class', 'id_feature')
+                .attr("x", 25)
+                .attr("dy", "1.2em")
+                .style("text-anchor", "middle")
+                .attr("font-size", "14px");
+
+            tooltip.append("text")
+                .attr('class', 'value_feature')
+                .attr("x", 25)
+                .attr("dy", "2.4em")
+                .style("text-anchor", "middle")
+                .attr("font-size", "14px")
+                .attr("font-weight", "bold");
+        });
+
+        function updateMiniBars() {
+            let mini_bars = context.selectAll(".bar")
+                .data(data);
+
+            mini_bars
+                .attr("x", 0)
+                .attr("width", d => width2 - x2(d.ratio))
+                .attr("y", d => y2(d.id))
+                .attr("height", y2.bandwidth())
+                .style('fill', d => d.id !== my_region ? 'steelblue' : 'yellow');
+
+            mini_bars
+                .enter()
+                .insert("rect")
+                .attr("class", "bar")
+                .attr("x", 0)
+                .attr("width", d => width2 - x2(d.ratio))
+                .attr("y", d => y2(d.id))
+                .attr("height", y2.bandwidth())
+                .style('fill', d => d.id !== my_region ? 'steelblue' : 'yellow');;
+            mini_bars.exit().remove();
+            context.select('.axis--y').remove();
+            context.append("g")
+                .attr("class", "axis axis--y")
+                .attr("transform", "translate(0,0)")
+                .call(yAxis2)
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(0)");
+
+        }
+
+        function update() {
+            displayed = 0;
+            let bar = focus.selectAll(".bar")
+                .data(data);
+
+            bar
+                .attr("x", 0)
+                .attr("width", d => width - x(d.ratio))
+                .attr("y", d => y(d.id))
+                .attr("height", y.bandwidth())
+                .style('fill', d => d.id !== my_region ? 'steelblue' : 'yellow')
+                .style("display", (d) => {
+                    let to_display = y(d.id) != null;
+                    if (to_display) {
+                        displayed += 1;
+                        return 'initial';
+                    }
+                    return 'none';
+                })
+                .on("mouseover", () => { svg.select('.tooltip').style('display', null); })
+                .on("mouseout", () => { svg.select('.tooltip').style('display', 'none'); })
+                .on("mousemove", function (d) {
+                    const tooltip = svg.select('.tooltip');
+                    tooltip
+                        .select("text.id_feature")
+                        .text(`${d.id}`);
+                    tooltip.select('text.value_feature')
+                        .text(`${Math.round(d.ratio)}`);
+                    tooltip
+                        .attr('transform', `translate(${[d3.mouse(this)[0] - 5, d3.mouse(this)[1] - 25]})`);
+                });
+
+            bar.enter()
+                .insert("rect", '.mean')
+                .attr("class", "bar")
+                .attr("x", 0)
+                .attr("width", d => width - x(d.ratio))
+                .attr("y", d => y(d.id))
+                .attr("height", y.bandwidth());
+
+            bar.exit().remove();
+        }
+
+        function updateAxis() {
+            let axis_y = focus.select(".axis--y").call(yAxis);
+            axis_y.selectAll("text")
+                .attrs(d => {
+                    if (displayed > 20) {
+                        return { dx: '-0.8em', dy: '0.15em', transform: 'rotate(-65)' };
+                    } else {
+                        return { dx: '0', dy: '0.71em', transform: null };
+                    }
+                })
+                .style('text-anchor', d => displayed > 20 ? 'end' : 'middle');
+        }
+
+        function updateContext(min, max) {
+            context.selectAll(".bar")
+                .style('fill-opacity', (_, i) => i >= min && i < max ? '1' : '0.3');
+        }
+
+        function brushed() {
+            if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
+            // var st = d3.event.target.extent();
+            // if (st[1]-st[0] < 0.2) {
+            //     var start = Math.round((data.length-1)*st[0]);
+            //     var end = Math.round((data.length-1)*st[1]);
+
+            //     var s = d3.event.selection || y2.range();
+            //     current_range = [Math.round(s[0] / (height / nbFt)), Math.round(s[1] / (height / nbFt))];
+            // } else {
+            //     d3.event.target.extent([st[0],st[0]+0.2]); 
+            //     d3.event.target(d3.select(this));
+            //     var s = d3.event.selection || y2.range();
+            //     current_range = [Math.round(s[0] / (height / nbFt)), Math.round(s[1] / (height / nbFt))];
+            // }
+            var s = d3.event.selection || y2.range();
+            if(s[0] > s[1]) {
+                s = [s[1], s[0]];
+            }
+            current_range = [Math.round(s[0] / (height / nbFt)), Math.round(s[1] / (height / nbFt))];
+            y.domain(data.reverse().slice(current_range[0], current_range[1]).map(ft => ft.id));
+            svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
+                .scale(height / (current_range[1] - current_range[0]))
+                .translate(-current_range[0], 0));
+            update();
+            updateAxis();
+            updateContext(current_range[0], current_range[1]);
+        }
+
+    </script>
+</body>
+
+</html>
