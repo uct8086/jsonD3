@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../../scripts/d3.v4.min.js"></script>
+    <style>
+        #container{
+            margin: 20px;
+        }
+        .title{
+            stroke: blueviolet;
+        }
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #666;
+            shape-rendering: crispEdges;
+        }
+    
+        .axis text {
+            font-family: 'Microsoft YaHei';
+            font-size: 12px;
+            fill:#666;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+</body>
+</html>
+<script>
+     // 数据点
+     var dataset = [
+      [0, 0], [65.66, 420], [540, 260], [360, 320], [200, 200],
+      [130, 623], [652, 52], [333, 666], [729, 656], [134, 352],
+      [120, 56], [905, 177], [777, 888], [550, 680]
+    ];
+    let width=800
+    let height=400
+    let padding=60
+
+    //创建画布
+    let svg=d3.select("#container")
+    .append("svg")
+    .attr("width",width)
+    .attr("height",height)
+
+    //x轴标尺
+    let xScale=d3.scaleLinear()
+    .domain([0,d3.max(dataset,(d)=>d[0])])
+    .range([padding,width-padding*2])
+
+     //y轴标尺
+    let yScale=d3.scaleLinear()
+    .domain([0,d3.max(dataset,(d)=>d[1])])
+    .range([height-padding,padding])
+
+     //原点的标尺
+    var rScale = d3.scaleLinear()
+      .domain([0, d3.max(dataset, function(d) {
+        return d[1];
+      })]).range([2, 4]);
+
+      //画出各个点点并添加到画布中
+      svg.selectAll("circle")
+      .data(dataset)
+      .enter()
+      .append("circle")
+      .attr("cx",(d)=>{
+          return xScale(d[0])
+      })
+      .attr("cy",(d)=>{
+          return yScale(d[1])
+      })
+      .attr("r",(d)=>{
+          return rScale(d[1])
+      })
+      .attr("fill","red")
+
+     
+       //x坐标轴
+      let xAxis=d3.axisBottom()
+      .scale(xScale)
+      .ticks(7)
+
+      //y坐标轴
+      let yAxis=d3.axisLeft()
+      .scale(yScale)
+      .ticks(7)
+
+      //把坐标轴添加到画布中
+      svg.append("g")
+      .attr("class","axis")
+      .attr("transform","translate(0,"+(height-padding)+")")
+      .call(xAxis)
+      svg.append("g")
+      .attr("class","axis")
+      .attr("transform","translate("+padding+",0)")
+      .call(yAxis)
+</script>

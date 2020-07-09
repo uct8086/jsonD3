@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>bar-y</title>
+  <link rel="stylesheet" href="./styles/style4book.css" />
+</head>
+
+<body>
+  <div class="svg-zone"></div>
+  <script src="./scripts/d3.v4.min.js"></script>
+  <script type="text/javascript">
+// salesperson,sales
+// Bob,33
+// Robin,12
+  // setInterval(() => {
+  //   let data = [];
+  //   data.push({salesperson:"Bob", sales: Math.random(10) * 100})
+  //   data.push({salesperson:"Robin", sales: Math.random(10) * 100})
+  //   render(data);
+  // }, 1000);
+
+  let data = [];
+    data.push({salesperson:"Bob", sales: Math.random(10) * 100})
+    data.push({salesperson:"Robin", sales: Math.random(10) * 100})
+    data.push({salesperson:"Robin2", sales: Math.random(10) * 100})
+    data.push({salesperson:"Robin3", sales: Math.random(10) * 100})
+    render(data);
+
+  function render(data) {
+    var width = 960,
+      height = 500,
+      padding = 20,
+      margin = 5;
+
+    var x = d3.scaleBand()
+      .range([width, padding])
+      .padding(0.1);
+    var y = d3.scaleLinear()
+      .range([ 0 , height- padding]);
+
+      d3.selectAll('svg').remove();
+    var svg = d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+      let dTarget = svg
+      .append("g")
+        .selectAll(".bar")
+        .data(data);
+
+      data.forEach(function (d) {
+        d.sales = +d.sales;
+      });
+
+      let xScale = x.domain(data.map(function (d) { return d.salesperson; }));
+      y.domain([0, d3.max(data, function (d) { return d.sales; })]);
+      let scale = d3.scaleOrdinal(d3.schemeCategory10);
+      dTarget.enter().append("rect")
+        .attr("class", "bar")
+        .merge(dTarget)
+        .attr("x", function (d) { return x(d.salesperson); })
+        .attr("width", x.bandwidth())
+        .attr("y", function (d) { return height- padding - margin -y(d.sales); })
+        .attr("height", function (d) { 
+          let ddd =  y(d.sales); 
+          console.log(ddd);
+          return ddd;
+        })
+        .style("fill", function(d,i) {return scale(i + 1)})
+
+      let yScale = y.domain([d3.max(data, function (d) { return d.sales; }), 0]);
+      //x坐标轴
+      let xAxis=d3.axisBottom()
+      .scale(xScale)
+      // .ticks(7)
+
+      //y坐标轴
+      let yAxis=d3.axisLeft()
+      .scale(yScale)
+      .ticks(7)
+
+      //把坐标轴添加到画布中
+      svg.append("g")
+      .attr("class","axis")
+      .attr("transform","translate(0,"+(height - padding)+")")
+      .call(xAxis)
+      svg.append("g")
+      .attr("class","axis")
+      .attr("transform","translate("+padding+",0)")
+      .call(yAxis)
+        svg.exit().remove();
+  }
+    
+
+  </script>
+
+</body>
+
+</html>
