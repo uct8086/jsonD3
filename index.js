@@ -44,7 +44,7 @@ const server = http.createServer(async (req,res)=>{
          			res.end();
          		})
          	}else{
-         		console.log(data)
+         		// console.log(data)
          		let mime = getMime(fs,extName);
          		res.writeHead(200,{"Content-Type":`${mime};chartset='utf8'`});
          		res.write(data); 
