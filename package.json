@@ -9,6 +9,8 @@
   "author": "uct",
   "license": "ISC",
   "dependencies": {
+    "d3-lasso": "0.0.5",
+    "d3-tip": "^0.9.1",
     "nodemon": "^1.19.1"
   }
 }
