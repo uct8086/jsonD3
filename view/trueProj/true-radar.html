@@ -56,6 +56,17 @@
           { axis: 'Information Technology', value: 25 },
           { axis: 'Administration', value: 23 }
         ]
+      },
+      {
+        name: 'Actual',
+        axes: [
+          { axis: 'Sales', value: 22 },
+          { axis: 'Marketing', value: 30 },
+          { axis: 'Development', value: 44 },
+          { axis: 'Customer Support', value: 52 },
+          { axis: 'Information Technology', value: 26 },
+          { axis: 'Administration', value: 28 }
+        ]
       }
     ];
 
@@ -69,9 +80,9 @@
       h: 500,
       margin: margin,
       maxValue: 60,
-      levels: 20,
+      levels: 10,
       roundStrokes: false,
-      color: d3.scaleOrdinal().range(["#AFC52F", "#ff6600"]),
+      color: d3.scaleOrdinal().range(["#4D8FFF", "#8AE3C0"]),
       format: '.0f',
       legend: { title: 'Organization XYZ', translateX: 100, translateY: 40 },
       unit: '$',
