@@ -11,7 +11,7 @@ option = {
     },
     name : {
         formatter:function(a,b){ // b是所有对象
-            return a
+            return a + "\n" + a;
         },
         textStyle: {color:'red'}
     },
@@ -31,13 +31,15 @@ option = {
             axisLine:{
                 show: true,
                 lineStyle:{
-                    color: '#C8C8C8' 
-                }
+                    color: '#C8C8C8',
+                    opacity:0.3
+                },
             },
             splitLine:{
                 show:true,
                 lineStyle:{
-                    color: '#C8C8C8' 
+                    color: '#C8C8C8',
+                    opacity:0.3
                 }
             },
             splitArea:{
@@ -46,7 +48,7 @@ option = {
                     color: '#fff'
                 }
             },
-            radius: 80
+            radius: 150
         }
     ],
     series: [
@@ -70,6 +72,7 @@ option = {
                         color: "#4D8FFF",
                         opacity: 1,
                     },
+                    symbol:'circle',
                     itemStyle:{
                         color: "#4D8FFF",
                         opacity:1
@@ -87,6 +90,7 @@ option = {
                         color: "#8AE3C0",
                         opacity: 1,
                     },
+                    symbol:'circle',
                     itemStyle:{
                         color: "#8AE3C0",
                     }
